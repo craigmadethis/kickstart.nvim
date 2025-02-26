@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -156,14 +156,25 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- add additional filetype
+vim.filetype.add {
+  extension = {
+    mdx = 'mdx',
+  },
+}
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
+vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -175,10 +186,10 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -188,6 +199,36 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+--
+-- Hash sign using keychron k4 :  https://stackoverflow.com/questions/1517136/meta-and-in-a-uk-mac-terminal#:~:text=I'm%20using%20iTerm2%20and,%2D3%20does%20the%20%23%20key.
+-- allows you to type option+3 on Mac keyboard to get a hash sign
+vim.api.nvim_set_keymap('i', '<M-3>', '#', { noremap = true })
+-- also in command mode, so you can use # in filenames, regular expressions etc.
+vim.api.nvim_set_keymap('c', '<M-3>', '#', { noremap = true })
+
+local lazygit_toggle = function()
+  local Terminal = require('toggleterm.terminal').Terminal
+  local lazygit = Terminal:new {
+    cmd = 'lazygit',
+    hidden = true,
+    direction = 'float',
+    float_opts = {
+      border = 'none',
+      width = 100000,
+      height = 100000,
+      zindex = 200,
+    },
+    on_open = function(_)
+      vim.cmd 'startinsert!'
+    end,
+    on_close = function(_) end,
+    count = 99,
+  }
+  lazygit:toggle()
+end
+--
+vim.keymap.set('n', '<leader>gg', lazygit_toggle, { desc = 'Open Lazygit' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -248,6 +289,18 @@ require('lazy').setup({
   --        end,
   --    }
   --
+  -- "gc" to comment visual regions/lines
+
+  { 'JoosepAlviste/nvim-ts-context-commentstring' },
+  {
+    'numToStr/Comment.nvim',
+    config = function()
+      require('Comment').setup {
+        pre_hook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook(),
+      }
+    end,
+  },
+
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`.
   --
@@ -414,14 +467,17 @@ require('lazy').setup({
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      -- vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      -- vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      -- vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<C-p>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<C-g>', builtin.find_files, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<C-f>', builtin.live_grep, { desc = 'Search by Grep' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -554,6 +610,9 @@ require('lazy').setup({
           -- or a suggestion from your LSP for this to activate.
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
 
+          -- Opens a popup that displays documentation about the word under your cursor
+          --  See `:help K` for why this keymap.
+          map('K', vim.lsp.buf.hover, 'Hover Documentation')
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
@@ -761,7 +820,16 @@ require('lazy').setup({
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        -- You can use a sub-list to tell conform to run *until* a formatter
+        -- is found.
+        -- javascript = { { 'biome-check', 'prettierd' } },
+        -- typescript = { { 'biome-check', 'prettierd' } },
+        -- typescriptreact = { { 'biome-check', 'prettierd' } },
+        -- json = { { 'biome-check', 'prettierd' } },
+        javascript = { { 'prettierd' } },
+        typescript = { { 'prettierd' } },
+        typescriptreact = { { 'prettierd' } },
+        json = { { 'prettierd' } },
       },
     },
   },
@@ -953,6 +1021,11 @@ require('lazy').setup({
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
       ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      rainbow = {
+        enable = true,
+        -- extended_mode = true,
+        -- max_file_lines = 1000,
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -973,6 +1046,132 @@ require('lazy').setup({
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
+  {
+    'catppuccin/nvim',
+    name = 'catppuccin',
+
+    priority = 1000, -- Make sure to load this before all the other start plugins.
+    init = function()
+      -- Load the colorscheme here.
+      -- Like many other themes, this one has different styles, and you could load
+      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+      vim.cmd.colorscheme 'catppuccin-mocha'
+
+      -- You can configure highlights by doing something like:
+      vim.cmd.hi 'Comment gui=none'
+    end,
+  },
+  -- {
+  --   'zbirenbaum/copilot.lua',
+  --   event = { 'VimEnter' },
+  --   config = function()
+  --     vim.defer_fn(function()
+  --       require('copilot').setup {
+  --         plugin_manager_path = lazypath,
+  --         panel = {
+  --           enabled = true,
+  --           auto_refresh = false,
+  --           keymap = {
+  --             jump_prev = '[[',
+  --             jump_next = ']]',
+  --             accept = '<CR>',
+  --             refresh = 'gr',
+  --             open = '<M-CR>',
+  --           },
+  --           layout = {
+  --             position = 'bottom', -- | top | left | right
+  --             ratio = 0.4,
+  --           },
+  --         },
+  --         suggestion = {
+  --           enabled = true,
+  --           auto_trigger = true,
+  --           debounce = 75,
+  --           keymap = {
+  --             accept = '<M-l>',
+  --             accept_word = false,
+  --             accept_line = false,
+  --             next = '<M-]>',
+  --             prev = '<M-[>',
+  --             dismiss = '<C-]>',
+  --           },
+  --         },
+  --         filetypes = {
+  --           yaml = false,
+  --           markdown = false,
+  --           help = false,
+  --           gitcommit = false,
+  --           gitrebase = false,
+  --           hgcommit = false,
+  --           svn = false,
+  --           cvs = false,
+  --           ['.'] = false,
+  --         },
+  --         copilot_node_command = 'node', -- Node.js version must be > 16.x
+  --         server_opts_overrides = {},
+  --       }
+  --     end, 100)
+  --   end,
+  -- },
+
+  -- { 'mrjones2014/nvim-ts-rainbow' },
+
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    opts = {
+
+      active = true,
+      on_config_done = nil,
+      -- size can be a number or function which is passed the current terminal
+      size = 20,
+      open_mapping = [[<c-\>]],
+      hide_numbers = true, -- hide the number column in toggleterm buffers
+      shade_filetypes = {},
+      shade_terminals = true,
+      shading_factor = 2, -- the degree by which to darken to terminal colour, default: 1 for dark backgrounds, 3 for light
+      start_in_insert = true,
+      insert_mappings = true, -- whether or not the open mapping applies in insert mode
+      persist_size = false,
+      -- direction = 'vertical' | 'horizontal' | 'window' | 'float',
+      direction = 'float',
+      close_on_exit = true, -- close the terminal window when the process exits
+      auto_scroll = true, -- automatically scroll to the bottom on terminal output
+      shell = nil, -- change the default shell
+      -- This field is only relevant if direction is set to 'float'
+      float_opts = {
+        -- The border key is *almost* the same as 'nvim_win_open'
+        -- see :h nvim_win_open for details on borders however
+        -- the 'curved' border is a custom border type
+        -- not natively supported but implemented in this plugin.
+        -- border = 'single' | 'double' | 'shadow' | 'curved' | ... other options supported by win open
+        border = 'curved',
+        -- width = <value>,
+        -- height = <value>,
+        winblend = 0,
+        highlights = {
+          border = 'Normal',
+          background = 'Normal',
+        },
+      },
+      winbar = {
+        enabled = false,
+      },
+      -- Add executables on the config.lua
+      -- { cmd, keymap, description, direction, size }
+      -- lvim.builtin.terminal.execs = {...} to overwrite
+      -- lvim.builtin.terminal.execs[#lvim.builtin.terminal.execs+1] = {"gdb", "tg", "GNU Debugger"}
+      -- TODO: pls add mappings in which key and refactor this
+      execs = {
+        { nil, '<M-1>', 'Horizontal Terminal', 'horizontal', 0.3 },
+        { nil, '<M-2>', 'Vertical Terminal', 'vertical', 0.4 },
+        { nil, '<M-3>', 'Float Terminal', 'float', nil },
+      },
+    },
+  },
+  --
+
+  -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
 
@@ -983,9 +1182,9 @@ require('lazy').setup({
   --
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
